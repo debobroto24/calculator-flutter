@@ -1,115 +1,199 @@
 import 'package:flutter/material.dart';
+import 'package:math_expressions/math_expressions.dart';
 
 void main() {
-  runApp(const MyApp());
+  runApp(const Calculator());
 }
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
-
-  // This widget is the root of your application.
+class Calculator extends StatelessWidget {
+  const Calculator({super.key});
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Demo',
-      theme: ThemeData(
-        // This is the theme of your application.
-        //
-        // Try running your application with "flutter run". You'll see the
-        // application has a blue toolbar. Then, without quitting the app, try
-        // changing the primarySwatch below to Colors.green and then invoke
-        // "hot reload" (press "r" in the console where you ran "flutter run",
-        // or simply save your changes to "hot reload" in a Flutter IDE).
-        // Notice that the counter didn't reset back to zero; the application
-        // is not restarted.
-        primarySwatch: Colors.blue,
-      ),
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
+      debugShowCheckedModeBanner: false,
+      title: "Calculator",
+      theme: ThemeData(primarySwatch: Colors.blue),
+      home: SimpleCalculator(),
     );
   }
 }
 
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
-
-  // This widget is the home page of your application. It is stateful, meaning
-  // that it has a State object (defined below) that contains fields that affect
-  // how it looks.
-
-  // This class is the configuration for the state. It holds the values (in this
-  // case the title) provided by the parent (in this case the App widget) and
-  // used by the build method of the State. Fields in a Widget subclass are
-  // always marked "final".
-
-  final String title;
+class SimpleCalculator extends StatefulWidget {
+  const SimpleCalculator({Key? key}) : super(key: key);
 
   @override
-  State<MyHomePage> createState() => _MyHomePageState();
+  _SimpleCalculator createState() => _SimpleCalculator();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
+class _SimpleCalculator extends State<SimpleCalculator> {
+  String equation = "0";
+  String result = "0";
+  String expression = "0";
+  double equationFont = 38.0;
+  double resultFont = 48.0;
 
-  void _incrementCounter() {
+  onPressed(String text) {
     setState(() {
-      // This call to setState tells the Flutter framework that something has
-      // changed in this State, which causes it to rerun the build method below
-      // so that the display can reflect the updated values. If we changed
-      // _counter without calling setState(), then the build method would not be
-      // called again, and so nothing would appear to happen.
-      _counter++;
+      if (text == "c") {
+        equation = "0";
+        result = "0";
+        equationFont = 38.0;
+        resultFont = 48.0;
+      } else if (text == "x") {
+        equationFont = 48.0;
+        resultFont = 38.0;
+        equation = equation.substring(0, equation.length - 1);
+        if (equation == "0") {
+          equation = "0";
+        }
+      } else if (text == "=") {
+        equationFont = 38.0;
+        resultFont = 48.0;
+        expression = equation;
+        expression = expression.replaceAll('⨰', '*');
+        expression = expression.replaceAll('÷', '/');
+        try {
+          Parser p = new Parser();
+          Expression exp = p.parse(expression);
+          ContextModel cm = ContextModel();
+          result = '${exp.evaluate(EvaluationType.REAL, cm)}';
+        } catch (e) {
+          result = "Error"; 
+        }
+      } else {
+        equationFont = 48.0;
+        resultFont = 38.0;
+        if (equation == "0") {
+          equation = text;
+        } else {
+          equation = equation + text;
+        }
+      }
     });
   }
 
   @override
-  Widget build(BuildContext context) {
-    // This method is rerun every time setState is called, for instance as done
-    // by the _incrementCounter method above.
-    //
-    // The Flutter framework has been optimized to make rerunning build methods
-    // fast, so that you can just rebuild anything that needs updating rather
-    // than having to individually change instances of widgets.
-    return Scaffold(
-      appBar: AppBar(
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
-        title: Text(widget.title),
-      ),
-      body: Center(
-        // Center is a layout widget. It takes a single child and positions it
-        // in the middle of the parent.
-        child: Column(
-          // Column is also a layout widget. It takes a list of children and
-          // arranges them vertically. By default, it sizes itself to fit its
-          // children horizontally, and tries to be as tall as its parent.
-          //
-          // Invoke "debug painting" (press "p" in the console, choose the
-          // "Toggle Debug Paint" action from the Flutter Inspector in Android
-          // Studio, or the "Toggle Debug Paint" command in Visual Studio Code)
-          // to see the wireframe for each widget.
-          //
-          // Column has various properties to control how it sizes itself and
-          // how it positions its children. Here we use mainAxisAlignment to
-          // center the children vertically; the main axis here is the vertical
-          // axis because Columns are vertical (the cross axis would be
-          // horizontal).
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            const Text(
-              'You have pushed the button this many times:',
+  Widget customButton(String text, double height, Color color) {
+    return Container(
+      height: MediaQuery.of(context).size.height * 0.1 * height,
+      padding: const EdgeInsets.all(8.0),
+      color: color,
+      child: TextButton(
+        style: ButtonStyle(
+          shape: MaterialStateProperty.all(
+            RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(0.0),
+              side: const BorderSide(
+                  color: Colors.white, width: 1, style: BorderStyle.solid),
             ),
-            Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.headlineMedium,
-            ),
-          ],
+          ),
+        ),
+        onPressed: () => onPressed(text),
+        child: Text(
+          text,
+          style: const TextStyle(
+              fontSize: 30.0,
+              fontWeight: FontWeight.normal,
+              color: Colors.white),
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: const Icon(Icons.add),
-      ), // This trailing comma makes auto-formatting nicer for build methods.
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text("Calculator"),
+        centerTitle: true,
+      ),
+      body: Column(
+        children: [
+          Container(
+            alignment: Alignment.centerRight,
+            padding: const EdgeInsets.fromLTRB(10, 20, 10, 0),
+            child: Text(
+              equation,
+              style: TextStyle(fontSize: equationFont),
+            ),
+          ),
+          Container(
+            alignment: Alignment.centerRight,
+            padding: const EdgeInsets.fromLTRB(10, 30, 10, 0),
+            child: Text(
+              result,
+              style: TextStyle(fontSize: resultFont),
+            ),
+          ),
+          Expanded(child: Divider()),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                width: MediaQuery.of(context).size.width * .75,
+                child: Table(
+                  children: [
+                    TableRow(
+                      children: [
+                        customButton("c", 1, Colors.redAccent),
+                        customButton("x", 1, Colors.blueAccent),
+                        customButton("÷", 1, Colors.blueAccent),
+                      ],
+                    ),
+                    TableRow(
+                      children: [
+                        customButton("7", 1, Colors.black45),
+                        customButton("8", 1, Colors.black45),
+                        customButton("9", 1, Colors.black45),
+                      ],
+                    ),
+                    TableRow(
+                      children: [
+                        customButton("4", 1, Colors.black45),
+                        customButton("5", 1, Colors.black45),
+                        customButton("6", 1, Colors.black45),
+                      ],
+                    ),
+                    TableRow(
+                      children: [
+                        customButton("1", 1, Colors.black45),
+                        customButton("2", 1, Colors.black45),
+                        customButton("3", 1, Colors.black45),
+                      ],
+                    ),
+                    TableRow(
+                      children: [
+                        customButton(".", 1, Colors.black45),
+                        customButton("0", 1, Colors.black45),
+                        customButton("00", 1, Colors.black45),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              Container(
+                width: MediaQuery.of(context).size.width * .25,
+                child: Table(
+                  children: [
+                    TableRow(children: [
+                      customButton("⨰", 1, Colors.blueAccent),
+                    ]),
+                    TableRow(children: [
+                      customButton("-", 1, Colors.blueAccent),
+                    ]),
+                    TableRow(children: [
+                      customButton("+", 1, Colors.blueAccent),
+                    ]),
+                    TableRow(children: [
+                      customButton("=", 2, Colors.blueAccent),
+                    ]),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 }
